@@ -1,0 +1,29 @@
+# Java class files
+*.class
+
+# Package Files #
+*.jar
+
+# IntelliJ IDEA project files and folders
+.idea/
+*.iml
+out/
+target/
+
+# VSCode project files (olabilir)
+.vscode/
+
+# OS X / Windows / Linux system files
+.DS_Store
+Thumbs.db
+
+# Database files
+db/*.db
+
+# Maven/Gradle cache (kullanıldıysa)
+.mvn/
+.gradle/
+build/
+
+# Local log files
+*.log
