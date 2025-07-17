@@ -14,50 +14,66 @@ public class BankApp {
 
         System.out.println("Welcome to the Bank Application!");
 
-        // User registration/login
-        System.out.print("Enter your username: ");
-        String username = sc.nextLine();
+        // Registration or Login selection
+        User user = null;
+        while (user == null) {
+            System.out.print("Do you want to (L)ogin or (R)egister? (L/R): ");
+            String action = sc.nextLine().trim().toUpperCase();
 
-        User user = userDAO.findUserByUsername(username);
-        if (user == null) {
-            System.out.println("No user found. Registration required.");
-            System.out.print("Choose password: ");
-            String password = sc.nextLine();
-            System.out.print("Enter your full name: ");
-            String fullName = sc.nextLine();
-            user = new User(username, password, fullName);
-            boolean reg = userDAO.addUser(user);
-            if (reg) {
-                System.out.println("Registration successful.");
+            if (action.equals("R")) {
+                System.out.print("Choose a username: ");
+                String username = sc.nextLine();
+                while (userDAO.findUserByUsername(username) != null) {
+                    System.out.println("Username already exists. Try again.");
+                    System.out.print("Choose a username: ");
+                    username = sc.nextLine();
+                }
+                System.out.print("Choose a password: ");
+                String password = sc.nextLine();
+                System.out.print("Enter your full name: ");
+                String fullName = sc.nextLine();
+                user = new User(username, password, fullName);
+                boolean reg = userDAO.addUser(user);
+                if (reg) {
+                    System.out.println("Registration successful. You are now logged in.");
+                } else {
+                    System.out.println("Registration failed. Try again.");
+                    user = null;
+                }
+            } else if (action.equals("L")) {
+                System.out.print("Enter your username: ");
+                String username = sc.nextLine();
+                System.out.print("Enter your password: ");
+                String password = sc.nextLine();
+                user = userDAO.findUserByUsername(username);
+                if (user == null || !user.getPassword().equals(password)) {
+                    System.out.println("Invalid username or password.");
+                    user = null;
+                } else {
+                    System.out.println("Welcome back, " + user.getFullName() + "!");
+                }
             } else {
-                System.out.println("Registration failed. Exiting...");
-                return;
+                System.out.println("Invalid input. Please enter L or R.");
             }
-        } else {
-            System.out.println("Welcome back, " + user.getFullName() + "!");
         }
 
         boolean running = true;
         while (running) {
             System.out.println("\n===== Main Menu =====");
-            System.out.println("1. List all users");
-            System.out.println("2. List my accounts");
-            System.out.println("3. Open a new account");
-            System.out.println("4. Make a transfer");
-            System.out.println("5. Check account balance");
-            System.out.println("6. Exit");
+            System.out.println("1. List my accounts");
+            System.out.println("2. Open a new account");
+            System.out.println("3. Make a transfer");
+            System.out.println("4. Check account balance");
+            System.out.println("5. Exit");
             System.out.print("Your choice: ");
             int choice = Integer.parseInt(sc.nextLine());
 
             switch (choice) {
                 case 1:
-                    userDAO.listAllUsers();
-                    break;
-                case 2:
                     accountDAO.listAccountsByUsername(user.getUsername());
                     break;
-                case 3:
-                    System.out.print("Choose your account number (must be unique): ");
+                case 2:
+                    System.out.print("Choose your new account number (must be unique): ");
                     String accountNo = sc.nextLine();
                     if (accountDAO.accountExists(accountNo)) {
                         System.out.println("This account number already exists!");
@@ -65,7 +81,6 @@ public class BankApp {
                     }
                     System.out.print("Initial balance: ");
                     double balance = Double.parseDouble(sc.nextLine());
-                    // Full name for account owner comes from User object for consistency
                     Account acc = accountDAO.createAccount(accountNo, balance, user.getFullName(), user.getUsername());
                     if (acc != null) {
                         System.out.println("Account created: " + acc);
@@ -73,23 +88,19 @@ public class BankApp {
                         System.out.println("Failed to create account.");
                     }
                     break;
-                case 4:
+                case 3:
                     System.out.print("Your account number: ");
                     String from = sc.nextLine();
                     System.out.print("Recipient account number: ");
                     String to = sc.nextLine();
-
-                    // Check sender account existence
                     if (!accountDAO.accountExists(from)) {
                         System.out.println("Your account does not exist! Transfer aborted.");
                         break;
                     }
-                    // Check receiver account existence
                     if (!accountDAO.accountExists(to)) {
                         System.out.println("Recipient account does not exist! Transfer aborted.");
                         break;
                     }
-
                     System.out.print("Amount: ");
                     double amount = Double.parseDouble(sc.nextLine());
                     if (accountDAO.transfer(from, to, amount)) {
@@ -98,7 +109,7 @@ public class BankApp {
                         System.out.println("Transfer failed.");
                     }
                     break;
-                case 5:
+                case 4:
                     System.out.print("Enter account number to check balance: ");
                     String balNo = sc.nextLine();
                     double bal = accountDAO.getBalance(balNo);
@@ -108,9 +119,9 @@ public class BankApp {
                         System.out.println("Account not found.");
                     }
                     break;
-                case 6:
+                case 5:
                     running = false;
-                    System.out.println("Exit.");
+                    System.out.println("Goodbye.");
                     break;
                 default:
                     System.out.println("Invalid choice.");

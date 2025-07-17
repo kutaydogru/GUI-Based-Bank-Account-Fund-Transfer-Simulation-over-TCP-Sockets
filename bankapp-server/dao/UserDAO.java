@@ -3,9 +3,6 @@ package dao;
 import model.User;
 import java.sql.*;
 
-/**
- * DAO for user operations.
- */
 public class UserDAO {
     private String url = "jdbc:sqlite:db/bank.db";
 
@@ -41,19 +38,5 @@ public class UserDAO {
             System.out.println("Failed to find user: " + e.getMessage());
         }
         return null;
-    }
-
-    public void listAllUsers() {
-        String sql = "SELECT username, full_name FROM users";
-        try (Connection conn = DriverManager.getConnection(url);
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            System.out.println("\nRegistered users:");
-            while (rs.next()) {
-                System.out.printf("- %s (%s)%n", rs.getString("username"), rs.getString("full_name"));
-            }
-        } catch (SQLException e) {
-            System.out.println("Failed to fetch user list: " + e.getMessage());
-        }
     }
 }
