@@ -28,7 +28,24 @@ public class AccountDAO {
         return null;
     }
 
-    // List all accounts for given username
+    // Add a new account (for testing purposes)
+    public boolean addAccount(Account account) {
+        String sql = "INSERT INTO accounts(account_no, balance, full_name, username) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DriverManager.getConnection(url);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, account.getAccountNo());
+            stmt.setDouble(2, account.getBalance());
+            stmt.setString(3, account.getFullName());
+            stmt.setString(4, account.getUsername());
+            int affected = stmt.executeUpdate();
+            return affected > 0;
+        } catch (SQLException e) {
+            System.out.println("Failed to add account: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // List all accounts for a given username
     public void listAccountsByUsername(String username) {
         String sql = "SELECT * FROM accounts WHERE username = ?";
         try (Connection conn = DriverManager.getConnection(url);
@@ -102,7 +119,7 @@ public class AccountDAO {
         }
     }
 
-    // Check if an account exists (for error checks)
+    // Check if an account exists (for error checking)
     public boolean accountExists(String accountNo) {
         String sql = "SELECT 1 FROM accounts WHERE account_no = ?";
         try (Connection conn = DriverManager.getConnection(url);
@@ -111,5 +128,41 @@ public class AccountDAO {
             return stmt.executeQuery().next();
         } catch (SQLException ignored) {}
         return false;
+    }
+
+    // Find account by account number (for testing)
+    public Account findAccountByAccountNo(String accountNo) {
+        String sql = "SELECT * FROM accounts WHERE account_no = ?";
+        try (Connection conn = DriverManager.getConnection(url);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, accountNo);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new Account(
+                        rs.getString("account_no"),
+                        rs.getDouble("balance"),
+                        rs.getString("full_name"),
+                        rs.getString("username")
+                );
+            }
+        } catch (SQLException e) {
+            System.out.println("Failed to find account: " + e.getMessage());
+        }
+        return null;
+    }
+
+    // Update account balance (for testing)
+    public boolean updateBalance(String accountNo, double newBalance) {
+        String sql = "UPDATE accounts SET balance = ? WHERE account_no = ?";
+        try (Connection conn = DriverManager.getConnection(url);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDouble(1, newBalance);
+            stmt.setString(2, accountNo);
+            int affected = stmt.executeUpdate();
+            return affected > 0;
+        } catch (SQLException e) {
+            System.out.println("Failed to update balance: " + e.getMessage());
+            return false;
+        }
     }
 }
