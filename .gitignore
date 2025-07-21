@@ -1,29 +1,38 @@
-# Java class files
-*.class
-
-# Package Files #
-*.jar
-
-# IntelliJ IDEA project files and folders
-.idea/
+# IntelliJ IDEA & Java
 *.iml
+.idea/
 out/
 target/
+bin/
+*.class
+*.jar
+*.log
 
-# VSCode project files (olabilir)
-.vscode/
-
-# OS X / Windows / Linux system files
-.DS_Store
-Thumbs.db
-
-# Database files
-db/*.db
-
-# Maven/Gradle cache (kullanıldıysa)
+# Maven
 .mvn/
+.settings/
+dependency-reduced-pom.xml
+
+# Gradle
 .gradle/
 build/
 
-# Local log files
-*.log
+# OS, Editor, temp files
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+*.swo
+
+# SQLite veritabanı ve geçici dosyalar
+*.db
+*.sqlite
+*.s3db
+*.db-journal
+
+# (Kütüphane .jar'ları dahil etmek istemiyorsan aktif et)
+# lib/*.jar
+
+# Kişisel/örnek configler
+*.env
+config.properties

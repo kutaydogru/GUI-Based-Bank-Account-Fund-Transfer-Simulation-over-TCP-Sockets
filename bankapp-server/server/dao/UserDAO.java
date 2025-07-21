@@ -1,10 +1,11 @@
-package dao;
+package server.dao;
 
-import model.User;
+import common.User;
+
 import java.sql.*;
 
 public class UserDAO {
-    private String url = "jdbc:sqlite:db/bank.db";
+    private String url = "jdbc:sqlite:server/db/bank.db";
 
     public boolean addUser(User user) {
         String sql = "INSERT INTO users(username, password, full_name) VALUES (?, ?, ?)";
@@ -13,8 +14,8 @@ public class UserDAO {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getPassword());
             stmt.setString(3, user.getFullName());
-            int affected = stmt.executeUpdate();
-            return affected > 0;
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
         } catch (SQLException e) {
             System.out.println("Failed to add user: " + e.getMessage());
             return false;

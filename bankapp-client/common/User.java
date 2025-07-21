@@ -1,9 +1,8 @@
-package model;
+package common;
 
-/**
- * User model representing a bank user.
- */
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
     private String username;
     private String password;
     private String fullName;
@@ -25,6 +24,6 @@ public class User {
 
     @Override
     public String toString() {
-        return String.format("User{username='%s', fullName='%s'}", username, fullName);
+        return "User{username='" + username + "', fullName='" + fullName + "'}";
     }
 }
