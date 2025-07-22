@@ -89,8 +89,10 @@ public class MainClient {
                     System.out.println("1. List Accounts");
                     System.out.println("2. Open New Account");
                     System.out.println("3. Transfer Money");
-                    System.out.println("4. Check Account Balance");
-                    System.out.println("5. Log Out");
+                    System.out.println("4. Withdraw Money");
+                    System.out.println("5. Deposit Money");
+                    System.out.println("6. Check Account Balance");
+                    System.out.println("7. Log Out");
                     System.out.println("0. Exit");
                     System.out.print("Choose: ");
                     String action = scanner.nextLine().trim();
@@ -154,8 +156,47 @@ public class MainClient {
                                 System.out.println("Error: " + jresp.get("error").getAsString());
                             }
                             break;
+                        case "4": // WITHDRAW
+                            // Withdraw money from account
+                            System.out.print("Enter account number: ");
+                            String withdrawAcc = scanner.nextLine();
+                            System.out.print("Enter amount to withdraw: ");
+                            String withdrawAmt = scanner.nextLine();
+                            JsonObject withObj = new JsonObject();
+                            withObj.addProperty("command", "WITHDRAW");
+                            withObj.addProperty("accountNo", withdrawAcc);
+                            withObj.addProperty("amount", withdrawAmt);
+                            cnm.sendLine(withObj.toString());
+                            resp = cnm.readLine();
+                            jresp = gson.fromJson(resp, JsonObject.class);
+                            if (jresp.has("status") && jresp.get("status").getAsString().equals("OK")) {
+                                System.out.println("Withdrawal successful.");
+                            } else {
+                                System.out.println("Error: " + jresp.get("error").getAsString());
+                            }
+                            break;
 
-                        case "4": // BALANCE
+                        case "5": // DEPOSIT
+                            // Deposit money to account
+                            System.out.print("Enter account number: ");
+                            String depositAcc = scanner.nextLine();
+                            System.out.print("Enter amount to deposit: ");
+                            String depositAmt = scanner.nextLine();
+                            JsonObject depObj = new JsonObject();
+                            depObj.addProperty("command", "DEPOSIT");
+                            depObj.addProperty("accountNo", depositAcc);
+                            depObj.addProperty("amount", depositAmt);
+                            cnm.sendLine(depObj.toString());
+                            resp = cnm.readLine();
+                            jresp = gson.fromJson(resp, JsonObject.class);
+                            if (jresp.has("status") && jresp.get("status").getAsString().equals("OK")) {
+                                System.out.println("Deposit successful.");
+                            } else {
+                                System.out.println("Error: " + jresp.get("error").getAsString());
+                            }
+                            break;
+
+                        case "6": // BALANCE
                             System.out.print("Enter account number: ");
                             String accForBal = scanner.nextLine();
                             obj.addProperty("command", "BALANCE");
@@ -170,7 +211,7 @@ public class MainClient {
                             }
                             break;
 
-                        case "5": // LOGOUT
+                        case "7": // LOGOUT
                             obj.addProperty("command", "LOGOUT");
                             cnm.sendLine(obj.toString());
                             System.out.println("Logged out.");

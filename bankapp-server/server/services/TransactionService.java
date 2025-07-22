@@ -22,6 +22,27 @@ public class TransactionService {
         return ok ? account : null;
     }
 
+    // Withdraw money from user's account
+    public String withdraw(String accountNo, double amount, String requestingUsername) {
+        Account account = accountDAO.findAccountByAccountNo(accountNo);
+        if (account == null) return "ERROR:notfound";
+        if (!account.getUsername().equals(requestingUsername)) return "ERROR:notyouraccount";
+        if (amount <= 0) return "ERROR:invalidamount";
+        if (account.getBalance() < amount) return "ERROR:balance";
+        accountDAO.updateAccountBalance(accountNo, account.getBalance() - amount);
+        return "OK";
+    }
+
+    // Deposit money to user's account
+    public String deposit(String accountNo, double amount, String requestingUsername) {
+        Account account = accountDAO.findAccountByAccountNo(accountNo);
+        if (account == null) return "ERROR:notfound";
+        if (!account.getUsername().equals(requestingUsername)) return "ERROR:notyouraccount";
+        if (amount <= 0) return "ERROR:invalidamount";
+        accountDAO.updateAccountBalance(accountNo, account.getBalance() + amount);
+        return "OK";
+    }
+
     // YENİ: account ownership ve güvenlik kontrolü
     public String transfer(String fromAccNo, String toAccNo, double amount, String requestingUsername) {
         Account from = accountDAO.findAccountByAccountNo(fromAccNo);

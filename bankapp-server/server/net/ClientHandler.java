@@ -153,6 +153,35 @@ public class ClientHandler implements Runnable {
                     } else {
                         return error(transferResult.replace("ERROR:",""));
                     }
+                case "WITHDRAW":
+                    // Withdraw money from an account (only owner can do)
+                    if (!isLoggedIn()) return error("notloggedin");
+                    String withdrawAcc = req.get("accountNo").getAsString();
+                    double withdrawAmt = req.get("amount").getAsDouble();
+                    String withdrawResult = txService.withdraw(withdrawAcc, withdrawAmt, loggedInUsername);
+                    if ("OK".equals(withdrawResult)) {
+                        System.out.println("User " + loggedInUsername + " withdrew " + withdrawAmt + " from " + withdrawAcc);
+                        JsonObject res = new JsonObject();
+                        res.addProperty("status", "OK");
+                        return res.toString();
+                    } else {
+                        return error(withdrawResult.replace("ERROR:", ""));
+                    }
+
+                case "DEPOSIT":
+                    // Deposit money to an account (only owner can do)
+                    if (!isLoggedIn()) return error("notloggedin");
+                    String depositAcc = req.get("accountNo").getAsString();
+                    double depositAmt = req.get("amount").getAsDouble();
+                    String depositResult = txService.deposit(depositAcc, depositAmt, loggedInUsername);
+                    if ("OK".equals(depositResult)) {
+                        System.out.println("User " + loggedInUsername + " deposited " + depositAmt + " to " + depositAcc);
+                        JsonObject res = new JsonObject();
+                        res.addProperty("status", "OK");
+                        return res.toString();
+                    } else {
+                        return error(depositResult.replace("ERROR:", ""));
+                    }
 
                 case "BALANCE":
                     if (!isLoggedIn()) return error("notloggedin");
