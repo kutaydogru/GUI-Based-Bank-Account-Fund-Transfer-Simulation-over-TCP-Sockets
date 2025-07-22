@@ -5,7 +5,7 @@ import server.dao.UserDAO;
 
 /**
  * AuthenticationService:
- * Sunucu tarafında kullanıcı kayıt ve giriş işlemlerinin iş mantığı.
+ * Business logic for user registration and login on the server side.
  */
 public class AuthenticationService {
     private UserDAO userDAO;
@@ -15,8 +15,8 @@ public class AuthenticationService {
     }
 
     /**
-     * Kayıt işlemi.
-     * @return Başarılıysa "OK:<fullName>", kullanıcı adı zaten varsa "ERROR:exists", hata olursa "ERROR:fail"
+     * Registers a new user.
+     * @return "OK:<fullName>" if successful, "ERROR:exists" if the username already exists, "ERROR:fail" for other errors.
      */
     public String register(String username, String password, String fullName) {
         if (userDAO.findUserByUsername(username) != null) {
@@ -32,8 +32,8 @@ public class AuthenticationService {
     }
 
     /**
-     * Giriş işlemi.
-     * @return Başarılıysa "OK:<fullName>", kullanıcı yoksa "ERROR:notfound", yanlış şifre ise "ERROR:wrongpass"
+     * Logs in the user.
+     * @return "OK:<fullName>" if successful, "ERROR:notfound" if the user does not exist, "ERROR:wrongpass" if the password is incorrect.
      */
     public String login(String username, String password) {
         User user = userDAO.findUserByUsername(username);
