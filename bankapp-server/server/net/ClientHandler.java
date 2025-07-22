@@ -32,7 +32,9 @@ public class ClientHandler implements Runnable {
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true)
         ) {
-            System.out.println("New client connected: " + socket.getInetAddress());
+            System.out.println("New client connected: " + socket.getInetAddress()
+                    + " Thread: " + Thread.currentThread().getId());
+
             out.println("{\"msg\": \"Welcome! Please LOGIN or REGISTER\"}");
 
             String line;
@@ -40,7 +42,8 @@ public class ClientHandler implements Runnable {
                 String response = handleCommand(line);
                 out.println(response);
                 if (isQuit(line)) {
-                    System.out.println("Client disconnected: " + socket.getInetAddress());
+                    System.out.println("Client disconnected: " + socket.getInetAddress()
+                            + " Thread: " + Thread.currentThread().getId());
                     break;
                 }
             }
