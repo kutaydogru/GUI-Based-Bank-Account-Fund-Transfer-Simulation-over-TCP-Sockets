@@ -63,7 +63,7 @@ public class ListAccountsWindow {
         btnBack.setOnAction(e -> new MainMenuWindow(stage, username).show());
 
         VBox vbox = new VBox(18, lblTitle, accBox, btnBack);
-        vbox.setAlignment(Pos.TOP_CENTER);
+        vbox.setAlignment(Pos.CENTER);
         vbox.setPadding(new Insets(32,32,32,32));
 
         StackPane root = new StackPane(vbox);
