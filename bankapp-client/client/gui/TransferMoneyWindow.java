@@ -59,7 +59,7 @@ public class TransferMoneyWindow {
         vbox.setAlignment(Pos.CENTER);
         vbox.setPadding(new Insets(30, 40, 30, 40));
         StackPane root = new StackPane(vbox);
-        root.setStyle("-fx-background-color: " + Theme.BG + ";");
+        root.setStyle("-fx-background-color: " + Theme.BG + "; -fx-font-size: 14px;");
         Scene scene = new Scene(root, 420, 400);
 
         scene.widthProperty().addListener((obs, oldVal, newVal) -> updateResponsive(vbox, lblTitle, scene));
@@ -74,7 +74,7 @@ public class TransferMoneyWindow {
         int titleFont = (int) Math.max(18, Math.min(32, h * 0.08));
         int spacing = (int) Math.max(10, Math.min(32, h * 0.055));
         int pad = (int) Math.max(12, Math.min(60, h * 0.13));
-        lblTitle.setStyle("-fx-font-size: " + titleFont + "px; -fx-font-weight: bold; -fx-text-fill:" + Theme.FG + "; -fx-font-size: 16px;");
+        lblTitle.setStyle("-fx-font-size: " + titleFont + "px; -fx-font-weight: bold; -fx-text-fill:" + Theme.FG + ";");
         vbox.setSpacing(spacing);
         vbox.setPadding(new Insets(pad, pad, pad, pad));
     }
