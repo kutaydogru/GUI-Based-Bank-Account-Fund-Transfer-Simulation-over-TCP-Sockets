@@ -6,71 +6,176 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import org.json.JSONObject;
 
+/**
+ * Screen for depositing money into an account.
+ */
 public class DepositWindow {
     private final Stage stage;
     private final String username;
+    private String prefilledAccountNo = "";
 
     public DepositWindow(Stage stage, String username) {
         this.stage = stage;
         this.username = username;
     }
 
+    /**
+     * Pre-fills the account number field
+     */
+    public void setPrefilledAccountNo(String accountNo) {
+        this.prefilledAccountNo = accountNo;
+    }
+
     public void show() {
-        Label lblTitle = new Label("Deposit");
-        lblTitle.setStyle("-fx-font-weight: bold; -fx-text-fill:" + Theme.FG + ";");
+        // Create sidebar
+        SideBarMenu sidebar = new SideBarMenu(stage, username, "deposit");
 
-        Label lblAccount = new Label("Account No:"); lblAccount.setStyle("-fx-text-fill:" + Theme.FG + ";");
-        TextField txtAccount = new TextField(); txtAccount.setStyle(Theme.TXT_FIELD);
+        // Main content area
+        VBox contentArea = new VBox(20);
+        contentArea.setStyle("-fx-background-color: " + Theme.CONTENT_BG + ";");
+        contentArea.setPadding(new Insets(30));
 
-        Label lblAmount = new Label("Amount:"); lblAmount.setStyle("-fx-text-fill:" + Theme.FG + ";");
-        TextField txtAmount = new TextField(); txtAmount.setStyle(Theme.TXT_FIELD);
+        // Page title
+        Label titleLabel = new Label("Deposit Money");
+        titleLabel.setStyle(Theme.PAGE_TITLE);
 
-        Button btnDeposit = new Button("Deposit"); btnDeposit.setStyle(Theme.BTN);
-        Button btnBack = new Button("Back"); btnBack.setStyle(Theme.BTN);
-        Label lblMsg = new Label();
+        // Form with inputs
+        Label lblDescription = new Label("Enter details to deposit money into your account:");
+        lblDescription.setStyle("-fx-font-size: 14px; -fx-text-fill: " + Theme.FG + ";");
 
+        Label lblAccountNo = new Label("Account Number:");
+        lblAccountNo.setStyle("-fx-text-fill: " + Theme.FG + ";");
+        TextField txtAccountNo = new TextField(prefilledAccountNo);
+        txtAccountNo.setStyle(Theme.TXT_FIELD);
+        txtAccountNo.setMaxWidth(300);
+        txtAccountNo.setPromptText("Enter account number");
+
+        Label lblAmount = new Label("Amount (TL):");
+        lblAmount.setStyle("-fx-text-fill: " + Theme.FG + ";");
+        TextField txtAmount = new TextField();
+        txtAmount.setStyle(Theme.TXT_FIELD);
+        txtAmount.setMaxWidth(300);
+        txtAmount.setPromptText("Enter deposit amount");
+
+        Button btnDeposit = new Button("Deposit Money");
+        btnDeposit.setStyle(Theme.SUCCESS_BTN);
+        btnDeposit.setMaxWidth(300);
+
+        // Success message container
+        VBox successBox = new VBox(10);
+        successBox.setAlignment(Pos.CENTER_LEFT);
+        successBox.setPadding(new Insets(15));
+        successBox.setMaxWidth(400);
+        successBox.setStyle("-fx-background-color: #2d7d4c30; -fx-border-color: #2d7d4c; -fx-border-radius: 5;");
+
+        Label successLabel = new Label("Deposit Completed Successfully!");
+        successLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #6aff81;");
+
+        Label successDetails = new Label();
+        successDetails.setStyle("-fx-text-fill: #6aff81;");
+
+        Button btnViewAccounts = new Button("View My Accounts");
+        btnViewAccounts.setStyle("-fx-background-color: #2d7d4c; -fx-text-fill: white;");
+        btnViewAccounts.setOnAction(e -> new ListAccountsWindow(stage, username).show());
+
+        successBox.getChildren().addAll(successLabel, successDetails, btnViewAccounts);
+        successBox.setVisible(false);
+
+        // Error message
+        Label lblError = new Label();
+        lblError.setStyle(Theme.ERROR);
+        lblError.setWrapText(true);
+        lblError.setMaxWidth(400);
+
+        VBox formContainer = new VBox(10);
+        formContainer.getChildren().addAll(lblDescription, lblAccountNo, txtAccountNo,
+                lblAmount, txtAmount, btnDeposit, lblError);
+        formContainer.setMaxWidth(400);
+        formContainer.setStyle(Theme.CARD);
+
+        contentArea.getChildren().addAll(titleLabel, formContainer, successBox);
+
+        // Deposit action
         btnDeposit.setOnAction(e -> {
-            String acc = txtAccount.getText().trim();
-            String amtt = txtAmount.getText().trim();
-            double amt = 0;
-            try { amt = Double.parseDouble(amtt); }
-            catch (Exception ex) { lblMsg.setStyle(Theme.ERROR); lblMsg.setText("Invalid amount."); return; }
-            String cmd = "{\"command\":\"DEPOSIT\",\"accountNo\":\"" + acc + "\",\"amount\":" + amt + "}";
+            String accountNo = txtAccountNo.getText().trim();
+            String amountStr = txtAmount.getText().trim();
+
+            if (accountNo.isEmpty() || amountStr.isEmpty()) {
+                lblError.setText("Please fill in all fields");
+                successBox.setVisible(false);
+                return;
+            }
+
+            double amount;
+            try {
+                amount = Double.parseDouble(amountStr);
+                if (amount <= 0) {
+                    lblError.setText("Amount must be positive");
+                    successBox.setVisible(false);
+                    return;
+                }
+            } catch (NumberFormatException ex) {
+                lblError.setText("Please enter a valid amount");
+                successBox.setVisible(false);
+                return;
+            }
+
+            String cmd = "{\"command\":\"DEPOSIT\",\"accountNo\":\"" + accountNo + "\",\"amount\":" + amount + "}";
             MainApp.network.sendLine(cmd);
             String response = null;
-            try { response = MainApp.network.readLine(); }
-            catch (Exception ex) { lblMsg.setStyle(Theme.ERROR); lblMsg.setText("No server response: " + ex.getMessage()); return; }
-            if (response != null && response.contains("\"status\":\"OK\"")) {
-                lblMsg.setStyle(Theme.SUCCESS); lblMsg.setText("Deposit successful!");
+            try {
+                response = MainApp.network.readLine();
+            } catch (Exception ex) {
+                lblError.setText("Error connecting to server: " + ex.getMessage());
+                successBox.setVisible(false);
+                return;
+            }
+
+            if (response != null) {
+                try {
+                    JSONObject json = new JSONObject(response);
+                    if ("OK".equals(json.optString("status"))) {
+                        lblError.setText("");
+                        successDetails.setText("Account Number: " + accountNo + "\nDeposited Amount: " + String.format("%.2f TL", amount));
+                        successBox.setVisible(true);
+                        txtAmount.clear();
+                    } else {
+                        lblError.setText(getErrorMessage(json.optString("error")));
+                        successBox.setVisible(false);
+                    }
+                } catch (Exception ex) {
+                    lblError.setText("Error processing response: " + ex.getMessage());
+                    successBox.setVisible(false);
+                }
             } else {
-                lblMsg.setStyle(Theme.ERROR); lblMsg.setText("Deposit failed: " + (response == null ? "" : response));
+                lblError.setText("No response from server");
+                successBox.setVisible(false);
             }
         });
 
-        btnBack.setOnAction(e -> new MainMenuWindow(stage, username).show());
+        // Main layout
+        BorderPane mainLayout = new BorderPane();
+        mainLayout.setLeft(sidebar);
+        mainLayout.setCenter(contentArea);
 
-        VBox vbox = new VBox(16, lblTitle, lblAccount, txtAccount, lblAmount, txtAmount, btnDeposit, btnBack, lblMsg);
-        vbox.setAlignment(Pos.CENTER);
-        vbox.setPadding(new Insets(30, 40, 30, 40));
-        StackPane root = new StackPane(vbox);
-        root.setStyle("-fx-background-color: " + Theme.BG + "; -fx-font-size: 16px;");
-        Scene scene = new Scene(root, 380, 340);
-
-        scene.widthProperty().addListener((obs, oldVal, newVal) -> updateResponsive(vbox, lblTitle, scene));
-        scene.heightProperty().addListener((obs, oldVal, newVal) -> updateResponsive(vbox, lblTitle, scene));
-        updateResponsive(vbox, lblTitle, scene);
-
-        WindowUtil.keepStageState(stage, scene);
+        Scene scene = new Scene(mainLayout, 1000, 700);
+        stage.setTitle("Banking Application - Deposit Money");
+        stage.setScene(scene);
+        stage.show();
     }
 
-    private void updateResponsive(VBox vbox, Label lblTitle, Scene scene) {
-        double h = scene.getHeight();
-        int titleFont = (int) Math.max(18, Math.min(32, h * 0.085));
-        int spacing = (int) Math.max(10, Math.min(32, h * 0.06));
-        int pad = (int) Math.max(12, Math.min(52, h * 0.10));
-        lblTitle.setStyle("-fx-font-size: " + titleFont + "px; -fx-font-weight: bold; -fx-text-fill:" + Theme.FG + ";");
-        vbox.setSpacing(spacing);
-        vbox.setPadding(new Insets(pad, pad, pad, pad));
+    /**
+     * Convert error codes to user-friendly messages
+     */
+    private String getErrorMessage(String errorCode) {
+        switch (errorCode) {
+            case "notyouraccount": return "This account doesn't belong to you";
+            case "notfound": return "Account not found";
+            case "invalidamount": return "Invalid amount";
+            case "notloggedin": return "You are not logged in";
+            default: return "Error: " + errorCode;
+        }
     }
 }

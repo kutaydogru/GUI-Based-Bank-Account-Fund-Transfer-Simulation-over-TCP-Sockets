@@ -3,11 +3,17 @@ package client.gui;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
+/**
+ * Main dashboard screen showing account overview
+ * and providing quick access to common functions.
+ * Updated with dark theme styling for tables and buttons.
+ */
 public class MainMenuWindow {
     private final Stage stage;
     private final String username;
@@ -18,71 +24,188 @@ public class MainMenuWindow {
     }
 
     public void show() {
-        Button btnLogout = new Button("Logout");
-        btnLogout.setStyle(Theme.LOGOUT);
-        btnLogout.setFocusTraversable(false);
-        btnLogout.setOnAction(e -> {
-            String cmd = "{\"command\":\"LOGOUT\"}";
-            MainApp.network.sendLine(cmd);
-            try { MainApp.network.readLine(); } catch (Exception ex) {}
-            new HomeWindow(stage).show();
+        // Create sidebar
+        SideBarMenu sidebar = new SideBarMenu(stage, username, "dashboard");
+
+        // Main content area
+        VBox contentArea = new VBox(20);
+        contentArea.setStyle("-fx-background-color: " + Theme.CONTENT_BG + ";");
+        contentArea.setPadding(new Insets(30));
+
+        // Page title
+        Label titleLabel = new Label("Dashboard");
+        titleLabel.setStyle(Theme.PAGE_TITLE);
+
+        // Welcome message
+        Label welcomeMsg = new Label("Welcome to the Bank Application");
+        welcomeMsg.setStyle("-fx-font-size: 18px; -fx-text-fill: " + Theme.FG + ";");
+
+        // Quick actions section
+        Label quickActionsLabel = new Label("Quick Actions");
+        quickActionsLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + Theme.FG + ";");
+
+        // Action buttons with dark theme styling
+        Button btnViewAccounts = createDashboardButton("View All Accounts", "See your account balances");
+        Button btnTransfer = createDashboardButton("Transfer Money", "Move funds between accounts");
+        Button btnDeposit = createDashboardButton("Deposit Money", "Add funds to your account");
+        Button btnWithdraw = createDashboardButton("Withdraw Money", "Take money from your account");
+
+        // Button actions
+        btnViewAccounts.setOnAction(e -> new ListAccountsWindow(stage, username).show());
+        btnTransfer.setOnAction(e -> new TransferMoneyWindow(stage, username).show());
+        btnDeposit.setOnAction(e -> new DepositWindow(stage, username).show());
+        btnWithdraw.setOnAction(e -> new WithdrawWindow(stage, username).show());
+
+        // Dashboard grid
+        GridPane actionGrid = new GridPane();
+        actionGrid.setHgap(20);
+        actionGrid.setVgap(20);
+        actionGrid.add(btnViewAccounts, 0, 0);
+        actionGrid.add(btnTransfer, 1, 0);
+        actionGrid.add(btnDeposit, 0, 1);
+        actionGrid.add(btnWithdraw, 1, 1);
+
+        // Account summary section
+        Label accountSummaryLabel = new Label("Account Summary");
+        accountSummaryLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + Theme.FG + ";");
+
+        // Account summary table with dark theme styling
+        TableView<ListAccountsWindow.AccountRow> accountTable = new TableView<>();
+        accountTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        accountTable.setMaxHeight(200);
+        accountTable.setStyle("-fx-background-color: " + Theme.PANEL_BG + "; " +
+                "-fx-table-cell-border-color: " + Theme.BORDER_COLOR + ";" +
+                "-fx-control-inner-background: " + Theme.PANEL_BG + ";" +
+                "-fx-table-header-border-color: " + Theme.BORDER_COLOR + ";" +
+                "-fx-text-background-color: " + Theme.FG + ";");
+
+        // Custom row styling for alternating rows
+        accountTable.setRowFactory(tv -> {
+            TableRow<ListAccountsWindow.AccountRow> row = new TableRow<ListAccountsWindow.AccountRow>() {
+                @Override
+                protected void updateItem(ListAccountsWindow.AccountRow item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setStyle("");
+                    } else {
+                        if (getIndex() % 2 == 0) {
+                            setStyle("-fx-background-color: " + Theme.PANEL_BG + ";");
+                        } else {
+                            setStyle("-fx-background-color: " + Theme.BG + ";");
+                        }
+                    }
+                }
+            };
+            return row;
         });
 
-        StackPane logoutPane = new StackPane(btnLogout);
-        StackPane.setAlignment(btnLogout, Pos.TOP_RIGHT);
-        StackPane.setMargin(btnLogout, new Insets(8, 8, 0, 0));
+        TableColumn<ListAccountsWindow.AccountRow, String> colAccNo = new TableColumn<>("Account Number");
+        colAccNo.setCellValueFactory(cellData -> cellData.getValue().accountNoProperty());
+        colAccNo.setStyle("-fx-background-color: " + Theme.PANEL_BG + "; -fx-text-fill: " + Theme.FG + ";");
 
-        Label lblWelcome = new Label("Welcome, " + username + "!");
-        lblWelcome.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: " + Theme.FG + ";");
+        TableColumn<ListAccountsWindow.AccountRow, String> colBalance = new TableColumn<>("Balance");
+        colBalance.setCellValueFactory(cellData -> cellData.getValue().balanceProperty());
+        colBalance.setStyle("-fx-background-color: " + Theme.PANEL_BG + "; -fx-alignment: CENTER-RIGHT; -fx-text-fill: " + Theme.FG + ";");
 
-        Button btnCreate = new Button("Create Account");   btnCreate.setStyle(Theme.BTN);
-        Button btnAccounts = new Button("List My Accounts"); btnAccounts.setStyle(Theme.BTN);
-        Button btnTransfer = new Button("Transfer Money"); btnTransfer.setStyle(Theme.BTN);
-        Button btnWithdraw = new Button("Withdraw");       btnWithdraw.setStyle(Theme.BTN);
-        Button btnDeposit = new Button("Deposit");         btnDeposit.setStyle(Theme.BTN);
-        Button btnBalance = new Button("Check Balance");   btnBalance.setStyle(Theme.BTN);
+        accountTable.getColumns().addAll(colAccNo, colBalance);
 
-        btnCreate.setMaxWidth(Double.MAX_VALUE); btnAccounts.setMaxWidth(Double.MAX_VALUE);
-        btnTransfer.setMaxWidth(Double.MAX_VALUE); btnWithdraw.setMaxWidth(Double.MAX_VALUE);
-        btnDeposit.setMaxWidth(Double.MAX_VALUE); btnBalance.setMaxWidth(Double.MAX_VALUE);
+        // Load accounts
+        loadAccounts(accountTable);
 
-        VBox buttonBox = new VBox(12, btnCreate, btnAccounts, btnTransfer, btnWithdraw, btnDeposit, btnBalance);
-        buttonBox.setAlignment(Pos.TOP_CENTER);
-        buttonBox.setPadding(new Insets(14, 44, 44, 44));
+        // Separator with custom style
+        Separator separator1 = new Separator();
+        separator1.setStyle("-fx-background-color: " + Theme.BORDER_COLOR + ";");
+        Separator separator2 = new Separator();
+        separator2.setStyle("-fx-background-color: " + Theme.BORDER_COLOR + ";");
 
-        VBox centerBox = new VBox(6, lblWelcome, buttonBox);
-        centerBox.setAlignment(Pos.TOP_CENTER);
-        VBox.setMargin(lblWelcome, new Insets(18,0,8,0));
+        contentArea.getChildren().addAll(
+                titleLabel,
+                welcomeMsg,
+                separator1,
+                quickActionsLabel,
+                actionGrid,
+                separator2,
+                accountSummaryLabel,
+                accountTable
+        );
 
-        BorderPane borderPane = new BorderPane();
-        borderPane.setTop(logoutPane);
-        borderPane.setCenter(centerBox);
+        // Main layout
+        BorderPane mainLayout = new BorderPane();
+        mainLayout.setLeft(sidebar);
+        mainLayout.setCenter(contentArea);
 
-        StackPane rootPane = new StackPane(borderPane);
-        rootPane.setStyle("-fx-background-color:" + Theme.BG + ";");
-        Scene scene = new Scene(rootPane, 540, 440);
-
-        scene.widthProperty().addListener((obs, oldVal, newVal) -> updateResponsive(centerBox, lblWelcome, scene));
-        scene.heightProperty().addListener((obs, oldVal, newVal) -> updateResponsive(centerBox, lblWelcome, scene));
-        updateResponsive(centerBox, lblWelcome, scene);
-
-        WindowUtil.keepStageState(stage, scene);
-
-        btnCreate.setOnAction(e -> new CreateAccountWindow(stage, username).show());
-        btnAccounts.setOnAction(e -> new ListAccountsWindow(stage, username).show());
-        btnTransfer.setOnAction(e -> new TransferMoneyWindow(stage, username).show());
-        btnWithdraw.setOnAction(e -> new WithdrawWindow(stage, username).show());
-        btnDeposit.setOnAction(e -> new DepositWindow(stage, username).show());
-        btnBalance.setOnAction(e -> new CheckBalanceWindow(stage, username).show());
+        Scene scene = new Scene(mainLayout, 1000, 700);
+        stage.setTitle("Banking Application - Dashboard");
+        stage.setScene(scene);
+        stage.show();
     }
 
-    private void updateResponsive(VBox vbox, Label lblTitle, Scene scene) {
-        double h = scene.getHeight();
-        int titleFont = (int) Math.max(18, Math.min(36, h * 0.09));
-        int spacing = (int) Math.max(10, Math.min(36, h * 0.07));
-        int pad = (int) Math.max(12, Math.min(56, h * 0.15));
-        lblTitle.setStyle("-fx-font-size: " + titleFont + "px; -fx-font-weight: bold; -fx-text-fill: " + Theme.FG + ";");
-        vbox.setSpacing(spacing);
-        vbox.setPadding(new Insets(pad, pad, pad, pad));
+    /**
+     * Creates a dashboard button with title and description
+     * Using dark theme styling
+     */
+    private Button createDashboardButton(String title, String description) {
+        Button btn = new Button();
+        btn.setStyle("-fx-background-color: " + Theme.PANEL_BG + "; -fx-border-color: " + Theme.BORDER_COLOR +
+                "; -fx-border-radius: 3; -fx-cursor: hand;");
+
+        Label titleLabel = new Label(title);
+        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: " + Theme.FG + ";");
+
+        Label descLabel = new Label(description);
+        descLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #888;");
+
+        VBox content = new VBox(5, titleLabel, descLabel);
+        content.setPadding(new Insets(15));
+        content.setPrefWidth(200);
+        content.setPrefHeight(100);
+
+        btn.setGraphic(content);
+
+        // Hover effect with dark theme colors
+        btn.setOnMouseEntered(e ->
+                btn.setStyle("-fx-background-color: #343638; -fx-border-color: " + Theme.SIDEBAR_BG + "; -fx-cursor: hand; -fx-border-radius: 3;")
+        );
+
+        btn.setOnMouseExited(e ->
+                btn.setStyle("-fx-background-color: " + Theme.PANEL_BG + "; -fx-border-color: " + Theme.BORDER_COLOR + "; -fx-cursor: hand; -fx-border-radius: 3;")
+        );
+
+        return btn;
+    }
+
+    /**
+     * Loads account data from server
+     */
+    private void loadAccounts(TableView<ListAccountsWindow.AccountRow> table) {
+        table.getItems().clear();
+
+        String cmd = "{\"command\":\"LIST\"}";
+        MainApp.network.sendLine(cmd);
+
+        String response = null;
+        try {
+            response = MainApp.network.readLine();
+        } catch (Exception ex) {
+            System.err.println("Error loading accounts: " + ex.getMessage());
+            return;
+        }
+
+        if (response != null) {
+            try {
+                JSONObject json = new JSONObject(response);
+                if (json.has("accounts")) {
+                    JSONArray accounts = json.getJSONArray("accounts");
+                    for (int i = 0; i < accounts.length() && i < 3; i++) { // Show only first 3 accounts
+                        JSONObject acc = accounts.getJSONObject(i);
+                        String accNo = acc.getString("accountNo");
+                        double balance = acc.getDouble("balance");
+                        table.getItems().add(new ListAccountsWindow.AccountRow(accNo, String.format("%.2f TL", balance)));
+                    }
+                }
+            } catch (Exception ex) {
+                System.err.println("Parse error: " + ex.getMessage());
+            }
+        }
     }
 }
