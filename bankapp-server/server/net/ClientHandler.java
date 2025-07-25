@@ -49,6 +49,12 @@ public class ClientHandler implements Runnable {
             }
         } catch (IOException e) {
             System.out.println("Client connection error: " + e.getMessage());
+        } finally {
+            // Ensure user is logged out when connection terminates unexpectedly
+            if (loggedInUsername != null) {
+                authService.logout(loggedInUsername);
+                System.out.println("User " + loggedInUsername + " session closed due to disconnect.");
+            }
         }
     }
 
@@ -99,14 +105,23 @@ public class ClientHandler implements Runnable {
                     } else {
                         JsonObject res = new JsonObject();
                         res.addProperty("status", "ERROR");
-                        res.addProperty("error", loginResult.replace("ERROR:",""));
+                        String errorMsg = loginResult.replace("ERROR:", "");
+                        // User-friendly error message
+                        if ("alreadyloggedin".equals(errorMsg)) {
+                            res.addProperty("error", "This account is already logged in from another session");
+                        } else {
+                            res.addProperty("error", errorMsg);
+                        }
                         return res.toString();
                     }
 
                 case "LOGOUT":
-                    System.out.println("User " + loggedInUsername + " logged out (" + socket.getInetAddress() + ")");
-                    loggedInUsername = null;
-                    loggedInFullName = null;
+                    if (loggedInUsername != null) {
+                        System.out.println("User " + loggedInUsername + " logged out (" + socket.getInetAddress() + ")");
+                        authService.logout(loggedInUsername);
+                        loggedInUsername = null;
+                        loggedInFullName = null;
+                    }
                     JsonObject logout = new JsonObject();
                     logout.addProperty("status", "OK");
                     return logout.toString();
@@ -197,6 +212,9 @@ public class ClientHandler implements Runnable {
                     }
 
                 case "QUIT":
+                    if (loggedInUsername != null) {
+                        authService.logout(loggedInUsername);
+                    }
                     System.out.println("Client disconnected: " + socket.getInetAddress());
                     return "{\"status\":\"BYE\"}";
 

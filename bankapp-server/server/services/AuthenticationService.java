@@ -33,7 +33,8 @@ public class AuthenticationService {
 
     /**
      * Logs in the user.
-     * @return "OK:<fullName>" if successful, "ERROR:notfound" if the user does not exist, "ERROR:wrongpass" if the password is incorrect.
+     * @return "OK:<fullName>" if successful, "ERROR:notfound" if the user does not exist,
+     * "ERROR:wrongpass" if the password is incorrect, "ERROR:alreadyloggedin" if user already has an active session.
      */
     public String login(String username, String password) {
         User user = userDAO.findUserByUsername(username);
@@ -43,6 +44,25 @@ public class AuthenticationService {
         if (!user.getPassword().equals(password)) {
             return "ERROR:wrongpass";
         }
+
+        // Check if user is already logged in
+        if (ActiveSessionManager.isUserActive(username)) {
+            return "ERROR:alreadyloggedin";
+        }
+
+        // Register the active session
+        ActiveSessionManager.registerSession(username);
+
         return "OK:" + user.getFullName();
+    }
+
+    /**
+     * Logs out a user and removes their session.
+     * @param username The username to log out
+     */
+    public void logout(String username) {
+        if (username != null) {
+            ActiveSessionManager.removeSession(username);
+        }
     }
 }
