@@ -26,17 +26,39 @@ The server can run on standard computers or on embedded hardware like **Orange P
 
 ---
 
+
 ## Screenshots
 
-<!--  
-To include screenshots, place image files within a folder such as  
-`bankapp-root/screenshots/` and reference as below:  
+<table style="border-collapse: separate; border: none;">
+  <tr style="border: none;">
+    <td width="48%" style="border: none;">
+      <h3 align="center">Home Page</h3>
+      <img src="screenshots/HomePage.png" width="100%" alt="Home Page">
+    </td>
+    <td width="4%" style="border: none;"></td>
+    <td width="48%" style="border: none;">
+      <h3 align="center">Main Menu</h3>
+      <img src="screenshots/MainMenuPage.png" width="100%" alt="Main Menu Page">
+    </td>
+  </tr>
+  <tr height="30px"><td colspan="3"></td></tr>
+  <tr style="border: none;">
+    <td width="48%" style="border: none;">
+      <h3 align="center">Transfer Money</h3>
+      <img src="screenshots/TransferMoneyPage.png" width="100%" alt="Transfer Money Page">
+    </td>
+    <td width="4%" style="border: none;"></td>
+    <td width="48%" style="border: none;">
+      <h3 align="center">Account List</h3>
+      <img src="screenshots/ListAccountPage.png" width="100%" alt="List Account Page">
+    </td>
+  </tr>
+</table>
 
-![Login Screen](screenshots/login.png)  
-![Dashboard](screenshots/dashboard.png)  
--->
-
----
+<div align="center" style="margin-top: 30px;">
+  <h3>Server Terminal</h3>
+  <img src="screenshots/ServerTerminal.png" width="70%" alt="Server Terminal">
+</div>
 
 ## Hardware Compatibility
 
