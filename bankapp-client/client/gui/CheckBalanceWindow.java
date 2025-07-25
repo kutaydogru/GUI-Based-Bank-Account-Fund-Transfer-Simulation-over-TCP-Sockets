@@ -43,27 +43,57 @@ public class CheckBalanceWindow {
 
         btnCheck.setOnAction(e -> {
             String acc = txtAccount.getText().trim();
+            if (acc.isEmpty()) {
+                lblMsg.setStyle(Theme.ERROR);
+                lblMsg.setText("Please enter an account number");
+                return;
+            }
+
             String cmd = "{\"command\":\"BALANCE\",\"accountNo\":\"" + acc + "\"}";
             MainApp.network.sendLine(cmd);
             String response = null;
             try { response = MainApp.network.readLine(); }
             catch (Exception ex) { lblMsg.setStyle(Theme.ERROR); lblMsg.setText("No server response: " + ex.getMessage()); return; }
+
             if (response != null) {
                 try {
                     JSONObject json = new JSONObject(response);
                     if (json.has("balance")) {
+                        // Success case
                         double bal = json.getDouble("balance");
                         lblMsg.setStyle(Theme.SUCCESS);
                         lblMsg.setText("Balance: " + bal + " TL");
                     } else if ("ERROR".equals(json.optString("status"))) {
+                        // Error handling with better messages
                         lblMsg.setStyle(Theme.ERROR);
-                        lblMsg.setText("Balance failed: " + json.optString("error"));
+                        String errorCode = json.optString("error");
+
+                        switch(errorCode) {
+                            case "notyouraccount":
+                                lblMsg.setText("This account doesn't belong to you.");
+                                break;
+                            case "notfound":
+                                lblMsg.setText("Account number doesn't exist.");
+                                break;
+                            case "notloggedin":
+                                lblMsg.setText("You must be logged in to check account balance.");
+                                break;
+                            default:
+                                lblMsg.setText("Balance check failed: " + errorCode);
+                                break;
+                        }
                     } else {
                         lblMsg.setStyle(Theme.ERROR);
                         lblMsg.setText("Unknown response: " + response);
                     }
-                } catch (Exception ex) { lblMsg.setStyle(Theme.ERROR); lblMsg.setText("Parse error: " + ex.getMessage()); }
-            } else { lblMsg.setStyle(Theme.ERROR); lblMsg.setText("Balance failed: empty response"); }
+                } catch (Exception ex) {
+                    lblMsg.setStyle(Theme.ERROR);
+                    lblMsg.setText("Parse error: " + ex.getMessage());
+                }
+            } else {
+                lblMsg.setStyle(Theme.ERROR);
+                lblMsg.setText("Balance failed: empty response");
+            }
         });
 
         btnBack.setOnAction(e -> new MainMenuWindow(stage, username).show());
